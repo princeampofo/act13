@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'success_screen.dart'; // Import for navigation
+import 'progress_tracker.dart'; // Import progress tracker
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -30,6 +31,9 @@ class _SignupScreenState extends State<SignupScreen> {
   
   // Achievement badges!
   List<String> _earnedBadges = [];
+  
+  // Progress tracker
+  double _completionProgress = 0.0;
   
   // Check how strong the password is
   void _checkPasswordStrength(String password) {
@@ -100,6 +104,21 @@ class _SignupScreenState extends State<SignupScreen> {
       _earnedBadges = badges;
     });
   }
+  
+  // Calculate how much of the form is completed
+  void _updateProgress() {
+    double progress = 0.0;
+    
+    if (_nameController.text.isNotEmpty) progress += 20;
+    if (_emailController.text.isNotEmpty) progress += 20;
+    if (_dobController.text.isNotEmpty) progress += 20;
+    if (_passwordController.text.isNotEmpty) progress += 20;
+    if (_selectedAvatar != null) progress += 20;
+    
+    setState(() {
+      _completionProgress = progress;
+    });
+  }
 
   @override
   void dispose() {
@@ -122,6 +141,7 @@ class _SignupScreenState extends State<SignupScreen> {
       setState(() {
         _dobController.text = "${picked.day}/${picked.month}/${picked.year}";
       });
+      _updateProgress();
     }
   }
 
@@ -145,7 +165,7 @@ class _SignupScreenState extends State<SignupScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => SuccessScreen(
-              userName: _nameController.text,
+              userName: _nameController.text, 
               userAvatar: _selectedAvatar,
               badges: _earnedBadges,
             ),
@@ -197,6 +217,10 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
+                
+                // Progress Tracker
+                ProgressTracker(progress: _completionProgress),
+                const SizedBox(height: 30),
 
                 // Avatar Selection Section
                 const Text(
@@ -219,6 +243,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         setState(() {
                           _selectedAvatar = avatar;
                         });
+                        _updateProgress();
                       },
                       child: Container(
                         width: 60,
@@ -308,6 +333,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   obscureText: !_isPasswordVisible,
                   onChanged: (value) {
                     _checkPasswordStrength(value);
+                    _updateProgress();
                   },
                   decoration: InputDecoration(
                     labelText: 'Secret Password',
@@ -430,6 +456,9 @@ class _SignupScreenState extends State<SignupScreen> {
   }) {
     return TextFormField(
       controller: controller,
+      onChanged: (value) {
+        _updateProgress();
+      },
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: Colors.deepPurple),
