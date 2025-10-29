@@ -16,6 +16,12 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _dobController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+  
+  // Avatar selection - picking from 5 fun avatars!
+  String? _selectedAvatar;
+  final List<String> _avatars = [
+    '😀', '😎', '🤩', '🥳', '🤗',
+  ];
 
   @override
   void dispose() {
@@ -57,7 +63,10 @@ class _SignupScreenState extends State<SignupScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => SuccessScreen(userName: _nameController.text),
+            builder: (context) => SuccessScreen(
+              userName: _nameController.text,
+              userAvatar: _selectedAvatar,
+            ),
           ),
         );
       });
@@ -104,6 +113,51 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                     ],
                   ),
+                ),
+                const SizedBox(height: 30),
+
+                // Avatar Selection Section
+                const Text(
+                  'Choose Your Avatar',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple,
+                  ),
+                ),
+                const SizedBox(height: 15),
+                
+                // Display avatars in a row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: _avatars.map((avatar) {
+                    bool isSelected = _selectedAvatar == avatar;
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedAvatar = avatar;
+                        });
+                      },
+                      child: Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: isSelected ? Colors.deepPurple : Colors.grey[200],
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected ? Colors.deepPurple : Colors.grey,
+                            width: 3,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            avatar,
+                            style: const TextStyle(fontSize: 30),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
                 const SizedBox(height: 30),
 

@@ -4,8 +4,13 @@ import 'package:confetti/confetti.dart';
 
 class SuccessScreen extends StatefulWidget {
   final String userName;
+  final String? userAvatar;
 
-  const SuccessScreen({super.key, required this.userName});
+  const SuccessScreen({
+    super.key,
+    required this.userName,
+    this.userAvatar,
+  });
 
   @override
   State<SuccessScreen> createState() => _SuccessScreenState();
@@ -75,10 +80,17 @@ class _SuccessScreenState extends State<SuccessScreen> {
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.celebration,
-                      color: Colors.white,
-                      size: 80,
+                    child: Center(
+                      child: widget.userAvatar != null
+                          ? Text(
+                              widget.userAvatar!,
+                              style: const TextStyle(fontSize: 80),
+                            )
+                          : const Icon(
+                              Icons.celebration,
+                              color: Colors.white,
+                              size: 80,
+                            ),
                     ),
                   ),
                   const SizedBox(height: 40),
