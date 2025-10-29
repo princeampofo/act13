@@ -22,6 +22,52 @@ class _SignupScreenState extends State<SignupScreen> {
   final List<String> _avatars = [
     '😀', '😎', '🤩', '🥳', '🤗',
   ];
+  
+  // Password strength checker
+  double _passwordStrength = 0.0;
+  Color _passwordStrengthColor = Colors.red;
+  String _passwordStrengthText = '';
+  
+  // Check how strong the password is
+  void _checkPasswordStrength(String password) {
+    setState(() {
+      if (password.isEmpty) {
+        _passwordStrength = 0.0;
+        _passwordStrengthColor = Colors.red;
+        _passwordStrengthText = '';
+        return;
+      }
+      
+      double strength = 0.0;
+      
+      // Check length
+      if (password.length >= 6) strength += 0.25;
+      if (password.length >= 8) strength += 0.25;
+      
+      // Check for numbers
+      if (password.contains(RegExp(r'[0-9]'))) strength += 0.25;
+      
+      // Check for special characters
+      if (password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) strength += 0.25;
+      
+      _passwordStrength = strength;
+      
+      // Set color and text based on strength
+      if (strength <= 0.25) {
+        _passwordStrengthColor = Colors.red;
+        _passwordStrengthText = 'Weak';
+      } else if (strength <= 0.5) {
+        _passwordStrengthColor = Colors.orange;
+        _passwordStrengthText = 'Fair';
+      } else if (strength <= 0.75) {
+        _passwordStrengthColor = Colors.yellow;
+        _passwordStrengthText = 'Good';
+      } else {
+        _passwordStrengthColor = Colors.green;
+        _passwordStrengthText = 'Strong';
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -224,6 +270,9 @@ class _SignupScreenState extends State<SignupScreen> {
                 TextFormField(
                   controller: _passwordController,
                   obscureText: !_isPasswordVisible,
+                  onChanged: (value) {
+                    _checkPasswordStrength(value);
+                  },
                   decoration: InputDecoration(
                     labelText: 'Secret Password',
                     prefixIcon:
@@ -257,6 +306,40 @@ class _SignupScreenState extends State<SignupScreen> {
                     return null;
                   },
                 ),
+                const SizedBox(height: 10),
+                
+                // Password Strength Meter
+                if (_passwordController.text.isNotEmpty)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Text(
+                            'Password Strength: ',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                          Text(
+                            _passwordStrengthText,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: _passwordStrengthColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 5),
+                      LinearProgressIndicator(
+                        value: _passwordStrength,
+                        backgroundColor: Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          _passwordStrengthColor,
+                        ),
+                        minHeight: 8,
+                      ),
+                    ],
+                  ),
                 const SizedBox(height: 30),
 
                 // Submit Button w/ Loading Animation
