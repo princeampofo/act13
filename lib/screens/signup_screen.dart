@@ -9,7 +9,7 @@ class SignupScreen extends StatefulWidget {
   State<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -34,6 +34,104 @@ class _SignupScreenState extends State<SignupScreen> {
   
   // Progress tracker
   double _completionProgress = 0.0;
+  
+  // Field validation states for animations
+  Map<String, bool> _fieldValidStates = {
+    'name': false,
+    'email': false,
+    'dob': false,
+    'password': false,
+  };
+  
+  // Animation controllers for bounce and shake
+  late AnimationController _nameShakeController;
+  late AnimationController _emailShakeController;
+  late AnimationController _dobShakeController;
+  late AnimationController _passwordShakeController;
+  
+  late AnimationController _nameBounceController;
+  late AnimationController _emailBounceController;
+  late AnimationController _dobBounceController;
+  late AnimationController _passwordBounceController;
+  
+  late Animation<double> _nameShakeAnimation;
+  late Animation<double> _emailShakeAnimation;
+  late Animation<double> _dobShakeAnimation;
+  late Animation<double> _passwordShakeAnimation;
+  
+  late Animation<double> _nameBounceAnimation;
+  late Animation<double> _emailBounceAnimation;
+  late Animation<double> _dobBounceAnimation;
+  late Animation<double> _passwordBounceAnimation;
+  
+  @override
+  void initState() {
+    super.initState();
+    
+    // Initialize shake controllers
+    _nameShakeController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _emailShakeController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _dobShakeController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _passwordShakeController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    
+    // Initialize bounce controllers
+    _nameBounceController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _emailBounceController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _dobBounceController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _passwordBounceController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    
+    // Create shake animations (side to side)
+    _nameShakeAnimation = Tween<double>(begin: 0, end: 10).animate(
+      CurvedAnimation(parent: _nameShakeController, curve: Curves.elasticIn),
+    );
+    _emailShakeAnimation = Tween<double>(begin: 0, end: 10).animate(
+      CurvedAnimation(parent: _emailShakeController, curve: Curves.elasticIn),
+    );
+    _dobShakeAnimation = Tween<double>(begin: 0, end: 10).animate(
+      CurvedAnimation(parent: _dobShakeController, curve: Curves.elasticIn),
+    );
+    _passwordShakeAnimation = Tween<double>(begin: 0, end: 10).animate(
+      CurvedAnimation(parent: _passwordShakeController, curve: Curves.elasticIn),
+    );
+    
+    // Create bounce animations (scale up and down)
+    _nameBounceAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _nameBounceController, curve: Curves.easeOut),
+    );
+    _emailBounceAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _emailBounceController, curve: Curves.easeOut),
+    );
+    _dobBounceAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _dobBounceController, curve: Curves.easeOut),
+    );
+    _passwordBounceAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _passwordBounceController, curve: Curves.easeOut),
+    );
+  }
   
   // Check how strong the password is
   void _checkPasswordStrength(String password) {
@@ -85,7 +183,7 @@ class _SignupScreenState extends State<SignupScreen> {
       badges.add('Strong Password Master 🏆');
     }
     
-    // Early Bird Special badge (just check if they signed up, time-based would need real implementation)
+    // Early Bird Special badge
     DateTime now = DateTime.now();
     if (now.hour < 12) {
       badges.add('The Early Bird Special 🐦');
@@ -119,6 +217,54 @@ class _SignupScreenState extends State<SignupScreen> {
       _completionProgress = progress;
     });
   }
+  
+  // Validate individual field and trigger animations
+  void _validateField(String field, String value) {
+    bool isValid = false;
+    
+    switch (field) {
+      case 'name':
+        isValid = value.isNotEmpty;
+        if (isValid && !_fieldValidStates['name']!) {
+          _triggerBounce(_nameBounceController);
+        } else if (!isValid && _fieldValidStates['name']!) {
+          _triggerShake(_nameShakeController);
+        }
+        break;
+      case 'email':
+        isValid = value.isNotEmpty && value.contains('@') && value.contains('.');
+        if (isValid && !_fieldValidStates['email']!) {
+          _triggerBounce(_emailBounceController);
+        } else if (!isValid && value.isNotEmpty && _fieldValidStates['email']!) {
+          _triggerShake(_emailShakeController);
+        }
+        break;
+      case 'password':
+        isValid = value.isNotEmpty && value.length >= 6;
+        if (isValid && !_fieldValidStates['password']!) {
+          _triggerBounce(_passwordBounceController);
+        } else if (!isValid && value.isNotEmpty && _fieldValidStates['password']!) {
+          _triggerShake(_passwordShakeController);
+        }
+        break;
+    }
+    
+    setState(() {
+      _fieldValidStates[field] = isValid;
+    });
+  }
+  
+  // Trigger shake animation
+  void _triggerShake(AnimationController controller) {
+    controller.reset();
+    controller.forward().then((_) => controller.reverse());
+  }
+  
+  // Trigger bounce animation
+  void _triggerBounce(AnimationController controller) {
+    controller.reset();
+    controller.forward().then((_) => controller.reverse());
+  }
 
   @override
   void dispose() {
@@ -126,6 +272,18 @@ class _SignupScreenState extends State<SignupScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _dobController.dispose();
+    
+    // Dispose animation controllers
+    _nameShakeController.dispose();
+    _emailShakeController.dispose();
+    _dobShakeController.dispose();
+    _passwordShakeController.dispose();
+    
+    _nameBounceController.dispose();
+    _emailBounceController.dispose();
+    _dobBounceController.dispose();
+    _passwordBounceController.dispose();
+    
     super.dispose();
   }
 
@@ -140,7 +298,9 @@ class _SignupScreenState extends State<SignupScreen> {
     if (picked != null) {
       setState(() {
         _dobController.text = "${picked.day}/${picked.month}/${picked.year}";
+        _fieldValidStates['dob'] = true;
       });
+      _triggerBounce(_dobBounceController);
       _updateProgress();
     }
   }
@@ -156,7 +316,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
       // Simulate API call
       Future.delayed(const Duration(seconds: 2), () {
-        if (!mounted) return; // Check if the widget is still in the tree
+        if (!mounted) return;
         setState(() {
           _isLoading = false;
         });
@@ -165,13 +325,23 @@ class _SignupScreenState extends State<SignupScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => SuccessScreen(
-              userName: _nameController.text, 
+              userName: _nameController.text,
               userAvatar: _selectedAvatar,
               badges: _earnedBadges,
             ),
           ),
         );
       });
+    } else {
+      // Shake all invalid fields
+      if (_nameController.text.isEmpty) _triggerShake(_nameShakeController);
+      if (_emailController.text.isEmpty || !_fieldValidStates['email']!) {
+        _triggerShake(_emailShakeController);
+      }
+      if (_dobController.text.isEmpty) _triggerShake(_dobShakeController);
+      if (_passwordController.text.isEmpty || !_fieldValidStates['password']!) {
+        _triggerShake(_passwordShakeController);
+      }
     }
   }
 
@@ -268,104 +438,184 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 30),
 
-                // Name Field
-                _buildTextField(
-                  controller: _nameController,
-                  label: 'Adventure Name',
-                  icon: Icons.person,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'What should we call you on this adventure?';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-
-                // Email Field
-                _buildTextField(
-                  controller: _emailController,
-                  label: 'Email Address',
-                  icon: Icons.email,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'We need your email for adventure updates!';
-                    }
-                    if (!value.contains('@') || !value.contains('.')) {
-                      return 'Oops! That doesn\'t look like a valid email';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-
-                // DOB w/Calendar
-                TextFormField(
-                  controller: _dobController,
-                  readOnly: true,
-                  onTap: _selectDate,
-                  decoration: InputDecoration(
-                    labelText: 'Date of Birth',
-                    prefixIcon:
-                        const Icon(Icons.calendar_today, color: Colors.deepPurple),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.date_range),
-                      onPressed: _selectDate,
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'When did your adventure begin?';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-
-                // Pswd Field w/ Toggle
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: !_isPasswordVisible,
-                  onChanged: (value) {
-                    _checkPasswordStrength(value);
-                    _updateProgress();
-                  },
-                  decoration: InputDecoration(
-                    labelText: 'Secret Password',
-                    prefixIcon:
-                        const Icon(Icons.lock, color: Colors.deepPurple),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isPasswordVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                        color: Colors.deepPurple,
+                // Name Field with animations
+                AnimatedBuilder(
+                  animation: Listenable.merge([_nameShakeAnimation, _nameBounceAnimation]),
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(
+                        _nameShakeAnimation.value * 
+                        ((_nameShakeController.value * 4).floor() % 2 == 0 ? 1 : -1),
+                        0,
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordVisible = !_isPasswordVisible;
-                        });
-                      },
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Every adventurer needs a secret password!';
-                    }
-                    if (value.length < 6) {
-                      return 'Make it stronger! At least 6 characters';
-                    }
-                    return null;
+                      child: Transform.scale(
+                        scale: _nameBounceAnimation.value,
+                        child: _buildAnimatedTextField(
+                          controller: _nameController,
+                          label: 'Adventure Name',
+                          icon: Icons.person,
+                          fieldKey: 'name',
+                          isValid: _fieldValidStates['name']!,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'What should we call you on this adventure?';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 20),
+
+                // Email Field with animations
+                AnimatedBuilder(
+                  animation: Listenable.merge([_emailShakeAnimation, _emailBounceAnimation]),
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(
+                        _emailShakeAnimation.value * 
+                        ((_emailShakeController.value * 4).floor() % 2 == 0 ? 1 : -1),
+                        0,
+                      ),
+                      child: Transform.scale(
+                        scale: _emailBounceAnimation.value,
+                        child: _buildAnimatedTextField(
+                          controller: _emailController,
+                          label: 'Email Address',
+                          icon: Icons.email,
+                          fieldKey: 'email',
+                          isValid: _fieldValidStates['email']!,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'We need your email for adventure updates!';
+                            }
+                            if (!value.contains('@') || !value.contains('.')) {
+                              return 'Oops! That doesn\'t look like a valid email';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 20),
+
+                // DOB with animations
+                AnimatedBuilder(
+                  animation: Listenable.merge([_dobShakeAnimation, _dobBounceAnimation]),
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(
+                        _dobShakeAnimation.value * 
+                        ((_dobShakeController.value * 4).floor() % 2 == 0 ? 1 : -1),
+                        0,
+                      ),
+                      child: Transform.scale(
+                        scale: _dobBounceAnimation.value,
+                        child: TextFormField(
+                          controller: _dobController,
+                          readOnly: true,
+                          onTap: _selectDate,
+                          decoration: InputDecoration(
+                            labelText: 'Date of Birth',
+                            prefixIcon: const Icon(Icons.calendar_today, color: Colors.deepPurple),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[50],
+                            suffixIcon: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (_fieldValidStates['dob']!)
+                                  const Icon(Icons.check_circle, color: Colors.green),
+                                IconButton(
+                                  icon: const Icon(Icons.date_range),
+                                  onPressed: _selectDate,
+                                ),
+                              ],
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'When did your adventure begin?';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 20),
+
+                // Password Field with animations
+                AnimatedBuilder(
+                  animation: Listenable.merge([_passwordShakeAnimation, _passwordBounceAnimation]),
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(
+                        _passwordShakeAnimation.value * 
+                        ((_passwordShakeController.value * 4).floor() % 2 == 0 ? 1 : -1),
+                        0,
+                      ),
+                      child: Transform.scale(
+                        scale: _passwordBounceAnimation.value,
+                        child: TextFormField(
+                          controller: _passwordController,
+                          obscureText: !_isPasswordVisible,
+                          onChanged: (value) {
+                            _checkPasswordStrength(value);
+                            _updateProgress();
+                            _validateField('password', value);
+                          },
+                          decoration: InputDecoration(
+                            labelText: 'Secret Password',
+                            prefixIcon: const Icon(Icons.lock, color: Colors.deepPurple),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[50],
+                            suffixIcon: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (_fieldValidStates['password']!)
+                                  const Padding(
+                                    padding: EdgeInsets.only(right: 8.0),
+                                    child: Icon(Icons.check_circle, color: Colors.green),
+                                  ),
+                                IconButton(
+                                  icon: Icon(
+                                    _isPasswordVisible
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: Colors.deepPurple,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isPasswordVisible = !_isPasswordVisible;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Every adventurer needs a secret password!';
+                            }
+                            if (value.length < 6) {
+                              return 'Make it stronger! At least 6 characters';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                    );
                   },
                 ),
                 const SizedBox(height: 10),
@@ -448,20 +698,26 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildAnimatedTextField({
     required TextEditingController controller,
     required String label,
     required IconData icon,
+    required String fieldKey,
+    required bool isValid,
     required String? Function(String?) validator,
   }) {
     return TextFormField(
       controller: controller,
       onChanged: (value) {
         _updateProgress();
+        _validateField(fieldKey, value);
       },
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: Colors.deepPurple),
+        suffixIcon: isValid
+            ? const Icon(Icons.check_circle, color: Colors.green)
+            : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
