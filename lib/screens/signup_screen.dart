@@ -28,6 +28,9 @@ class _SignupScreenState extends State<SignupScreen> {
   Color _passwordStrengthColor = Colors.red;
   String _passwordStrengthText = '';
   
+  // Achievement badges!
+  List<String> _earnedBadges = [];
+  
   // Check how strong the password is
   void _checkPasswordStrength(String password) {
     setState(() {
@@ -68,6 +71,35 @@ class _SignupScreenState extends State<SignupScreen> {
       }
     });
   }
+  
+  // Check if user earned any badges
+  void _checkBadges() {
+    List<String> badges = [];
+    
+    // Strong Password Master badge
+    if (_passwordStrength >= 0.75) {
+      badges.add('Strong Password Master 🏆');
+    }
+    
+    // Early Bird Special badge (just check if they signed up, time-based would need real implementation)
+    DateTime now = DateTime.now();
+    if (now.hour < 12) {
+      badges.add('The Early Bird Special 🐦');
+    }
+    
+    // Profile Completer badge
+    if (_nameController.text.isNotEmpty && 
+        _emailController.text.isNotEmpty && 
+        _dobController.text.isNotEmpty && 
+        _passwordController.text.isNotEmpty &&
+        _selectedAvatar != null) {
+      badges.add('Profile Completer ⭐');
+    }
+    
+    setState(() {
+      _earnedBadges = badges;
+    });
+  }
 
   @override
   void dispose() {
@@ -99,6 +131,9 @@ class _SignupScreenState extends State<SignupScreen> {
         _isLoading = true;
       });
 
+      // Check which badges they earned!
+      _checkBadges();
+
       // Simulate API call
       Future.delayed(const Duration(seconds: 2), () {
         if (!mounted) return; // Check if the widget is still in the tree
@@ -112,6 +147,7 @@ class _SignupScreenState extends State<SignupScreen> {
             builder: (context) => SuccessScreen(
               userName: _nameController.text,
               userAvatar: _selectedAvatar,
+              badges: _earnedBadges,
             ),
           ),
         );

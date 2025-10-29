@@ -5,11 +5,13 @@ import 'package:confetti/confetti.dart';
 class SuccessScreen extends StatefulWidget {
   final String userName;
   final String? userAvatar;
+  final List<String> badges;
 
   const SuccessScreen({
     super.key,
     required this.userName,
     this.userAvatar,
+    this.badges = const [],
   });
 
   @override
@@ -117,6 +119,42 @@ class _SuccessScreenState extends State<SuccessScreen> {
                     'Your adventure begins now!',
                     style: TextStyle(fontSize: 18, color: Colors.grey),
                   ),
+
+                  const SizedBox(height: 30),
+                  
+                  // Display earned badges
+                  if (widget.badges.isNotEmpty)
+                    Column(
+                      children: [
+                        const Text(
+                          'Achievement Badges Earned:',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.deepPurple,
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        ...widget.badges.map((badge) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 5),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.amber[100],
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(color: Colors.amber, width: 2),
+                            ),
+                            child: Text(
+                              badge,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        )),
+                      ],
+                    ),
 
                   const SizedBox(height: 50),
 
